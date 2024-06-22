@@ -1,5 +1,5 @@
 # bin
-myip
+bin/myip
 
 # Binaries for programs and plugins
 *.exe

@@ -9,41 +9,64 @@ import (
 	"strings"
 )
 
+type Alias struct {
+	Alias string `mapstructure:"alias"`
+	IP    string `mapstructure:"ip"`
+}
+
 var aliasFlag bool
+
+func getIp() (string, error) {
+	resp, err := http.Get("https://icanhazip.com")
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch IP address: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("unexpected status code: %v", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	ip := strings.TrimSuffix(string(body), "\n")
+	return ip, nil
+}
+
+func getAliasOrIp(ip string) (string, error) {
+	var aliases []Alias
+	if err := viper.UnmarshalKey("aliases", &aliases); err != nil {
+		return "", fmt.Errorf("unable to decode config into struct: %w", err)
+	}
+
+	for _, alias := range aliases {
+		if alias.IP == ip {
+			return alias.Alias, nil
+		}
+	}
+	return ip, nil
+}
 
 var ipCmd = &cobra.Command{
 	Use:   "ip",
 	Short: "Get your public IP address",
 	Run: func(cmd *cobra.Command, args []string) {
-		resp, err := http.Get("https://icanhazip.com")
+		ip, err := getIp()
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
 		}
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			fmt.Printf("error: status code: %v\n", resp.StatusCode)
-			return
-		}
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Printf("error: %v\n", err)
-			return
-		}
-
-		ip := strings.TrimSuffix(string(body), "\n")
 
 		if aliasFlag {
-			aliases := viper.Get("aliases").([]interface{})
-			for _, a := range aliases {
-				alias := a.(map[string]interface{})
-				if alias["ip"] == ip {
-					fmt.Printf("%s\n", alias["alias"])
-					return
-				}
+			aliasOrIp, err := getAliasOrIp(ip)
+			if err != nil {
+				fmt.Println("Error:", err)
+				return
 			}
-			fmt.Printf("%s\n", ip)
+			fmt.Printf("%s\n", aliasOrIp)
 		} else {
 			fmt.Printf("%s\n", ip)
 		}

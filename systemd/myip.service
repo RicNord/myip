@@ -1,0 +1,14 @@
+[Unit]
+Description=MyIp monitor service.
+PartOf=graphical-session.target
+StartLimitIntervalSec=120
+StartLimitBurst=10
+
+[Service]
+ExecStart=%h/go/bin/myip monitor-ip
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=graphical-session.target
+

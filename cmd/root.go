@@ -42,9 +42,9 @@ func getIp() (string, error) {
 }
 
 func getAliasOrIp(ip string) (ipOrAlias string, err error) {
-	var aliases []Alias
-	if err := viper.UnmarshalKey("aliases", &aliases); err != nil {
-		return "", fmt.Errorf("unable to decode config into struct: %w", err)
+	aliases, err := getAliases()
+	if err != nil {
+		return "", err
 	}
 
 	for _, alias := range aliases {
@@ -60,13 +60,13 @@ func writeIpToFile(ip string) (err error) {
 	filePath := filepath.Join(tmpDir, ".my-last-known-ip")
 	f, err := os.Create(filePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create file: %s, error: %v", filePath, err)
 	}
 
 	defer f.Close()
 	_, err = f.WriteString(ip)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to write IP to file: %s, error: %v", filePath, err)
 	}
 	return nil
 }
@@ -126,6 +126,7 @@ func init() {
 
 	rootCmd.AddCommand(lastIpCmd)
 	rootCmd.AddCommand(listAliasesCmd)
+	rootCmd.AddCommand(monitorIpCmd)
 
 }
 

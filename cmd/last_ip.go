@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func getLastKownIp() (ip string, ok bool) {
+func getLastKnownIp() (ip string, exist bool) {
 	var lastIP string
 	tempDir := os.TempDir()
 	filePath := filepath.Join(tempDir, ".my-last-known-ip")
@@ -38,8 +38,8 @@ var lastIpCmd = &cobra.Command{
 	Use:   "last",
 	Short: "Get last known ip or alias",
 	Run: func(cmd *cobra.Command, args []string) {
-		ip, ok := getLastKownIp()
-		if ok {
+		ip, exist := getLastKnownIp()
+		if exist {
 			fmt.Printf("%s\n", ip)
 		} else {
 			fmt.Printf("No stored ip or alias exist\n")

@@ -11,19 +11,29 @@ platforms.
 ## Features
 
 - Fetch and display your public IP address.
-- Display the alias for your public IP if it exists in the configuration file.
+    - Display the alias for your public IP if it exists in the configuration
+      file.
 - List all known IP aliases.
 - Monitor for IP changes and notify when a new IP or alias is detected.
+  (Optionally run as systemd user service)
 
 ## Installation
 
 1. Clone the repository
 
-2. Build the project:
+2. Install the project:
 
     ```sh
-    make build
+    make install
     ```
+
+3. *Optional for Linux users*: Start the systemd service to start monitor for
+   Ip changes
+
+   ```sh
+   systemctl --user daemon-reload
+   systemctl --user enable --now myip.service
+   ```
 
 ## Usage
 

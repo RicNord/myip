@@ -125,6 +125,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&aliasFlag, "alias", "a", false, "Show the alias for the public IP address")
 
 	rootCmd.AddCommand(lastIpCmd)
+	rootCmd.AddCommand(listAliasesCmd)
 
 }
 

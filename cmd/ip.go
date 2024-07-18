@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"io"
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -36,7 +40,7 @@ func getIp() (string, error) {
 	return ip, nil
 }
 
-func getAliasOrIp(ip string) (string, error) {
+func getAliasOrIp(ip string) (ipOrAlias string, err error) {
 	var aliases []Alias
 	if err := viper.UnmarshalKey("aliases", &aliases); err != nil {
 		return "", fmt.Errorf("unable to decode config into struct: %w", err)
@@ -48,6 +52,59 @@ func getAliasOrIp(ip string) (string, error) {
 		}
 	}
 	return ip, nil
+}
+
+func writeIpToFile(ip string) (err error) {
+	tmpDir := os.TempDir()
+	filePath := filepath.Join(tmpDir, ".my-last-known-ip")
+	f, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+	_, err = f.WriteString(ip)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getLastKownIp() (ip string, ok bool) {
+	var lastIP string
+	tempDir := os.TempDir()
+	filePath := filepath.Join(tempDir, ".my-last-known-ip")
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Printf("Failed to open file: %s, error: %v", filePath, err)
+		return "", false
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	if scanner.Scan() {
+		lastIP = scanner.Text()
+	}
+	if err := scanner.Err(); err != nil {
+		log.Printf("Failed to read IP from file: %s, error: %v", filePath, err)
+		return "", false
+	}
+
+	return lastIP, true
+}
+
+var lastIpCmd = &cobra.Command{
+	Use:   "last",
+	Short: "Get last known ip or alias",
+	Run: func(cmd *cobra.Command, args []string) {
+		ip, ok := getLastKownIp()
+		if ok {
+			fmt.Printf("%s\n", ip)
+		} else {
+			fmt.Printf("No stored ip or alias exist\n")
+		}
+	},
 }
 
 var ipCmd = &cobra.Command{
@@ -66,8 +123,16 @@ var ipCmd = &cobra.Command{
 				fmt.Println("Error:", err)
 				return
 			}
+			err = writeIpToFile(aliasOrIp)
+			if err != nil {
+				log.Println("Error:", err)
+			}
 			fmt.Printf("%s\n", aliasOrIp)
 		} else {
+			err := writeIpToFile(ip)
+			if err != nil {
+				log.Println("Error:", err)
+			}
 			fmt.Printf("%s\n", ip)
 		}
 	},

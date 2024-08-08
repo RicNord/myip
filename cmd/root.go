@@ -37,7 +37,7 @@ func getIp() (string, error) {
 		return "", fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	ip := strings.TrimSuffix(string(body), "\n")
+	ip := strings.TrimSpace(string(body))
 	return ip, nil
 }
 
@@ -81,24 +81,19 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
+		ipOrAlias := ip
 		if aliasFlag {
-			aliasOrIp, err := getAliasOrIp(ip)
+			ipOrAlias, err = getAliasOrIp(ip)
 			if err != nil {
-				fmt.Println("Error:", err)
+				log.Printf("Error: %v", err)
 				return
 			}
-			err = writeIpToFile(aliasOrIp)
-			if err != nil {
-				log.Println("Error:", err)
-			}
-			fmt.Printf("%s\n", aliasOrIp)
-		} else {
-			err := writeIpToFile(ip)
-			if err != nil {
-				log.Println("Error:", err)
-			}
-			fmt.Printf("%s\n", ip)
 		}
+
+		if err := writeIpToFile(ipOrAlias); err != nil {
+			log.Printf("Error: %v", err)
+		}
+		fmt.Println(ipOrAlias)
 	},
 }
 
@@ -150,6 +145,6 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		// fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		//log.Printf("Using config file: %s", viper.ConfigFileUsed())
 	}
 }

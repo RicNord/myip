@@ -22,7 +22,8 @@ var cfgFile string
 var aliasFlag bool
 
 func getIp() (string, error) {
-	resp, err := http.Get("https://icanhazip.com")
+	url := viper.GetString("url")
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch IP address: %w", err)
 	}
@@ -56,8 +57,7 @@ func getAliasOrIp(ip string) (ipOrAlias string, err error) {
 }
 
 func writeIpToFile(ip string) (err error) {
-	tmpDir := os.TempDir()
-	filePath := filepath.Join(tmpDir, ".my-last-known-ip")
+	filePath := viper.GetString("state-file")
 	f, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %s, error: %v", filePath, err)
@@ -140,7 +140,9 @@ func initConfig() {
 		viper.SetConfigType("json")
 		viper.SetConfigName(".myip")
 	}
-
+	viper.SetDefault("url", "https://icanhazip.com")
+	tempDir := os.TempDir()
+	viper.SetDefault("state-file", filepath.Join(tempDir, ".my-last-known-ip"))
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.

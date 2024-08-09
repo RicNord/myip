@@ -11,7 +11,7 @@ func TestGetAliases(t *testing.T) {
 		{Alias: "home", IP: "127.0.0.1"},
 		{Alias: "office", IP: "192.168.0.1"},
 	})
-
+	defer viper.Reset()
 	aliases, err := getAliases()
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)

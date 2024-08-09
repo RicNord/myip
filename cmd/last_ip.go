@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func getLastKnownIp() (ip string, exist bool) {
 	var lastIP string
-	tempDir := os.TempDir()
-	filePath := filepath.Join(tempDir, ".my-last-known-ip")
-
+	filePath := viper.GetString("state-file")
 	file, err := os.Open(filePath)
 	if err != nil {
 		log.Printf("Failed to open file: %s, error: %v", filePath, err)

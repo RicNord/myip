@@ -140,7 +140,7 @@ func initConfig() {
 		viper.SetConfigType("json")
 		viper.SetConfigName(".myip")
 	}
-	viper.SetDefault("url", "https://icanhazip.com")
+	viper.SetDefault("url", "https://ipv4.icanhazip.com")
 	tempDir := os.TempDir()
 	viper.SetDefault("state-file", filepath.Join(tempDir, ".my-last-known-ip"))
 	viper.AutomaticEnv() // read in environment variables that match
